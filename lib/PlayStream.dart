@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/rtc_video_view.dart';
@@ -25,6 +27,8 @@ class PlayStream extends StatefulWidget {
 class _PlayStreamState extends State<PlayStream> {
   Signaling _signaling;
   String _serverUrl='http://192.168.0.68:8000';
+  String video='rtsp://192.168.0.203/user=admin_password=tlJwpbo6_channel=1_stream=0.sdp?real_stream';
+  List<dynamic> mediaList= [];
 
   RTCVideoRenderer _localRenderer = new RTCVideoRenderer();
   RTCVideoRenderer _remoteRenderer = new RTCVideoRenderer();
@@ -44,7 +48,7 @@ class _PlayStreamState extends State<PlayStream> {
 
   void _connect() async {
     if (_signaling == null) {
-      _signaling = new Signaling(_serverUrl)..connect();
+      _signaling = new Signaling(_serverUrl,video)..connect();
 
       _signaling.onStateChange = (SignalingState state) {
         switch (state) {
@@ -101,6 +105,7 @@ class _PlayStreamState extends State<PlayStream> {
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
     return Scaffold(
+      extendBody: true,
       appBar: AppBar(
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
@@ -126,18 +131,66 @@ class _PlayStreamState extends State<PlayStream> {
                   ),
                 ),
               ),
-              RaisedButton(
-                  onPressed: () async {
-                    if(_signaling != null){
-                      _signaling.disconnect();
-                      _signaling = null;
-                      _connect();
-                    }
-                  },
-                child: Text(
-                    'Change Server Url',
-                    style: TextStyle(fontSize: 20)
-                )),
+              Row(
+                children: <Widget>[
+                  Padding(
+                    padding: EdgeInsets.all(10),
+                    child: Text("Video List:",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 16),),
+                  ),
+                  Container(
+                    child: new DropdownButton<String>(
+                      hint:  Text("Select item"),
+                      value: video,
+
+                      items: mediaList.map((dynamic media) {
+                        var value= media['video'];
+                        return new DropdownMenuItem<String>(
+                          value: value,
+                          child: new Text(value),
+                        );
+                      }).toList(),
+                      onChanged: (_value) {
+                        this.setState(() {
+                          video = _value;
+                        });
+                      },
+                    ),
+                  )
+                ],
+              ),
+              Row(
+                children: <Widget>[
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(0, 0, 10, 0),
+                      child: RaisedButton(
+                          onPressed: () async {
+                            var res = await _signaling.getMediaList(_serverUrl);
+                            this.setState(() {
+                              mediaList= json.decode(res);
+                            });
+                          },
+                          child: Text(
+                              'Get Video List',
+                              style: TextStyle(fontSize: 20)
+                          ))
+                  ),
+                  Padding(
+                      padding: EdgeInsets.fromLTRB(0, 0, 10, 0),
+                      child: RaisedButton(
+                          onPressed: () async {
+                            if(_signaling != null){
+                              _signaling.disconnect();
+                              _signaling = null;
+                              _connect();
+                            }
+                          },
+                          child: Text(
+                              'Connect',
+                              style: TextStyle(fontSize: 20)
+                          ))
+                  )
+                ],
+              ),
 
             Text(""),
               Text("Remote Video"),

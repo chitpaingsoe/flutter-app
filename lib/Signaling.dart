@@ -28,6 +28,7 @@ typedef void DataChannelCallback(RTCDataChannel dc);
 
 class Signaling {
   var _host;
+  var _media;
   var _dataChannels = new Map<String, RTCDataChannel>();
 
   MediaStream _localStream;
@@ -81,7 +82,7 @@ class Signaling {
     'optional': [],
   };
 
-  Signaling(this._host);
+  Signaling(this._host,this._media);
 
   close() async {
     if (_localStream != null) {
@@ -89,6 +90,12 @@ class Signaling {
       _localStream = null;
     }
   }
+
+  Future<dynamic> getMediaList(String url) async{
+    var res = await http.get(url+'/api/getMediaList');
+    return res.body;
+  }
+
 
   void disconnect() async {
     if (this._pc != null) {
@@ -122,7 +129,7 @@ class Signaling {
       await _createPeerConnection(this._id, media, false);
 
       var callurl =
-          this._host + "/api/call?peerid=" + this._id + "&url="+ Uri.encodeComponent(video);
+          this._host + "/api/call?peerid=" + this._id + "&url="+ Uri.encodeComponent(this._media);
       callurl += "&options=" + Uri.encodeComponent(options);
 
       // clear early candidates
