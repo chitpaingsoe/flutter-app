@@ -1,6 +1,6 @@
-# flutterapp
+# Flutter WebRTC Demo.
 
-A new Flutter application.
+A new Flutter application using WebRTC client.
 
 ## Getting Started
 
