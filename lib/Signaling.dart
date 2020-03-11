@@ -27,20 +27,14 @@ typedef void DataChannelMessageCallback(
 typedef void DataChannelCallback(RTCDataChannel dc);
 
 class Signaling {
-  String _selfId = randomNumeric(6);
-  var _sessionId = randomNumeric(6);
   var _host;
-  var _port = 4443;
-  var _peerConnections = new Map<String, RTCPeerConnection>();
   var _dataChannels = new Map<String, RTCDataChannel>();
-  var _remoteCandidates = [];
 
   MediaStream _localStream;
   List<MediaStream> _remoteStreams;
   RTCPeerConnection _pc = null;
   String _id = randomNumeric(6);
   bool _isCurrentRD=false;
-  dynamic _pcOptions;
   List _earlyCandidates = [];
   SignalingStateCallback onStateChange;
   StreamStateCallback onLocalStream;
@@ -95,13 +89,6 @@ class Signaling {
       _localStream = null;
     }
   }
-
-//  void bye() {
-//    _send('bye', {
-//      'session_id': this._sessionId,
-//      'from': this._selfId,
-//    });
-//  }
 
   void disconnect() async {
     if (this._pc != null) {
@@ -250,10 +237,8 @@ class Signaling {
       var type = data['type'];
       var descr = new RTCSessionDescription(sdp, type);
       if (this._pc != null) {
-        // await this._pc.createAnswer(_constraints);
         await this._pc.setRemoteDescription(descr);
-        //this._isCurrentRD =true;
-        //await this._pc.createAnswer(_constraints);
+
       }
 
       print('setRemote Deescrption Ok.');
@@ -293,7 +278,6 @@ class Signaling {
           this._earlyCandidates.add(event);
           this._isCurrentRD = true;
       }
-     // await this._pc.addCandidate(event);
 
     } else {
       print("End of candidates.");
