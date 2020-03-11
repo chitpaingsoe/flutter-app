@@ -73,7 +73,7 @@ class Signaling {
 
   final Map<String, dynamic> _constraints = {
     'mandatory': {
-      'OfferToReceiveAudio': false,
+      'OfferToReceiveAudio': true,
       'OfferToReceiveVideo': true,
     },
     'optional': [],
@@ -89,15 +89,11 @@ class Signaling {
 
   Signaling(this._host);
 
-  close() {
+  close() async {
     if (_localStream != null) {
       _localStream.dispose();
       _localStream = null;
     }
-
-    _peerConnections.forEach((key, pc) {
-      pc.close();
-    });
   }
 
 //  void bye() {
@@ -109,9 +105,9 @@ class Signaling {
 
   void disconnect() async {
     if (this._pc != null) {
-      var client =
           await http.get(this._host + '/api/hangup?peerid=' + this._id);
       try {
+        this._pc.dispose();
         this._pc.close();
       } on Exception {
         print('Fail to close peer Connection : ' + this._id);
@@ -181,7 +177,6 @@ class Signaling {
     //get IceServers
     var iceServersRepsonse = await http.get(this._host + '/api/getIceServers');
     RTCPeerConnection pc = await createPeerConnection(json.decode(iceServersRepsonse.body), _config);
-    this._pc = pc;
 
     pc.onIceCandidate = (candidate) async{
       await this._onIceCandidate(candidate);
@@ -210,7 +205,7 @@ class Signaling {
     pc.onDataChannel = (channel) {
       _addDataChannel(id, channel);
     };
-
+    this._pc = pc;
     return pc;
   }
 

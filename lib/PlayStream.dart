@@ -23,10 +23,9 @@ class PlayStream extends StatefulWidget {
 }
 
 class _PlayStreamState extends State<PlayStream> {
-  int _counter = 0;
   Signaling _signaling;
-  List<dynamic> _peers;
-  var _selfId;
+  String _serverUrl='http://192.168.0.68:8000';
+
   RTCVideoRenderer _localRenderer = new RTCVideoRenderer();
   RTCVideoRenderer _remoteRenderer = new RTCVideoRenderer();
 
@@ -45,7 +44,7 @@ class _PlayStreamState extends State<PlayStream> {
 
   void _connect() async {
     if (_signaling == null) {
-      _signaling = new Signaling('http://192.168.0.68:8000')..connect();
+      _signaling = new Signaling(_serverUrl)..connect();
 
       _signaling.onStateChange = (SignalingState state) {
         switch (state) {
@@ -72,10 +71,10 @@ class _PlayStreamState extends State<PlayStream> {
       };
 
       _signaling.onPeersUpdate = ((event) {
-        this.setState(() {
-          _selfId = event['self'];
-          _peers = event['peers'];
-        });
+//        this.setState(() {
+//          _selfId = event['self'];
+//          _peers = event['peers'];
+//        });
       });
 
       _signaling.onLocalStream = ((stream) {
@@ -92,16 +91,6 @@ class _PlayStreamState extends State<PlayStream> {
     }
   }
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -120,57 +109,52 @@ class _PlayStreamState extends State<PlayStream> {
       body:
       OrientationBuilder(builder: (context, orientation) {
         return new Container(
-          child: new Stack(children: <Widget>[
-            new Positioned(
-                left: 0.0,
-                right: 0.0,
-                top: 0.0,
-                bottom: 0.0,
-                child: new Container(
-                  margin: new EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
-                  width: 200,
-                  height: 200,
-                  child: new RTCVideoView(_remoteRenderer                                                                                                                                                                                                                              ),
-                  decoration: new BoxDecoration(color: Colors.black54),
+          child: Column(
+            children: <Widget>[
+              Text(""),
+              Padding(
+                padding: EdgeInsets.all(20),
+                child: TextField(
+                  onChanged: (value){
+                    this.setState(() {
+                      _serverUrl = value;
+                    });
+                  },
+                  decoration: InputDecoration(
+                      border: OutlineInputBorder(),
+                      hintText: _serverUrl
+                  ),
+                ),
+              ),
+              RaisedButton(
+                  onPressed: () async {
+                    if(_signaling != null){
+                      _signaling.disconnect();
+                      _signaling = null;
+                      _connect();
+                    }
+                  },
+                child: Text(
+                    'Change Server Url',
+                    style: TextStyle(fontSize: 20)
                 )),
-//            new Positioned(
-//              left: 20.0,
-//              top: 20.0,
-//              child: new Container(
-//                width: orientation == Orientation.portrait ? 90.0 : 120.0,
-//                height:
-//                orientation == Orientation.portrait ? 120.0 : 90.0,
-//                child: new RTCVideoView(_localRenderer),
-//                decoration: new BoxDecoration(color: Colors.black54),
-//              ),
-//            ),
-          ]),
+
+            Text(""),
+              Text("Remote Video"),
+              new Container(
+                margin: new EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
+                width: MediaQuery. of(context). size. width,
+                height:
+                 300 ,
+                child: new RTCVideoView(_remoteRenderer                                                                                                                                                                                                                              ),
+                decoration: new BoxDecoration(color: Colors.black54),
+              ),
+
+            ],
+          ),
         );
       })
-//      Column(
-//        children: <Widget>[
-//          Column(
-//            children: <Widget>[
-//              Text('Remote Video'),
-//              new Positioned(
-//                  left: 0.0,
-//                  right: 0.0,
-//                  top: 0.0,
-//                  bottom: 0.0,
-//                  child: new Container(
-//                    margin: new EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
-//                    width: 100,
-//                    height: 100,
-//                    child: new RTCVideoView(_localRenderer),
-//                    decoration: new BoxDecoration(color: Colors.amberAccent),
-//                  )),
-//
-//            ],
-//          ),
-//
-//
-//        ],
-//      )// This trailing comma makes auto-formatting nicer for build methods.
+
     );
   }
 }
