@@ -122,13 +122,12 @@ class Signaling {
 
   void connect() async {
     this.disconnect();
-    //get IceServers
-    // var iceServersRepsonse = await http.get(this._host + '/api/getIceServers');
     await this.onReceiveGetIceServers();
   }
 
   void onReceiveGetIceServers() async {
     var options = 'rtptransport=tcp&timeout=60';
+    var video = 'rtsp://192.168.0.203/user=admin_password=tlJwpbo6_channel=1_stream=0.sdp?real_stream';
 
     try {
       var media = 'video';
@@ -140,7 +139,7 @@ class Signaling {
       await _createPeerConnection(this._id, media, false);
 
       var callurl =
-          this._host + "/api/call?peerid=" + this._id + "&url=pklacam";
+          this._host + "/api/call?peerid=" + this._id + "&url="+ Uri.encodeComponent(video);
       callurl += "&options=" + Uri.encodeComponent(options);
 
       // clear early candidates
@@ -179,11 +178,13 @@ class Signaling {
   }
 
   _createPeerConnection(id, media, user_screen) async {
-    RTCPeerConnection pc = await createPeerConnection(_iceServers, _config);
+    //get IceServers
+    var iceServersRepsonse = await http.get(this._host + '/api/getIceServers');
+    RTCPeerConnection pc = await createPeerConnection(json.decode(iceServersRepsonse.body), _config);
     this._pc = pc;
 
-    pc.onIceCandidate = (candidate) {
-      this._onIceCandidate(candidate);
+    pc.onIceCandidate = (candidate) async{
+      await this._onIceCandidate(candidate);
     };
 
     pc.onIceConnectionState = (state) {
@@ -256,7 +257,7 @@ class Signaling {
       if (this._pc != null) {
         // await this._pc.createAnswer(_constraints);
         await this._pc.setRemoteDescription(descr);
-        this._isCurrentRD =true;
+        //this._isCurrentRD =true;
         //await this._pc.createAnswer(_constraints);
       }
 

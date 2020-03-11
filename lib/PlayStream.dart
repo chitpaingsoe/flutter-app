@@ -45,7 +45,7 @@ class _PlayStreamState extends State<PlayStream> {
 
   void _connect() async {
     if (_signaling == null) {
-      _signaling = new Signaling('http://192.168.0.69:8000')..connect();
+      _signaling = new Signaling('http://192.168.0.68:8000')..connect();
 
       _signaling.onStateChange = (SignalingState state) {
         switch (state) {
