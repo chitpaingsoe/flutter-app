@@ -26,8 +26,8 @@ class PlayStream extends StatefulWidget {
 
 class _PlayStreamState extends State<PlayStream> {
   Signaling _signaling;
-  String _serverUrl='http://192.168.0.68:8000';
-  String video='rtsp://192.168.0.203/user=admin_password=tlJwpbo6_channel=1_stream=0.sdp?real_stream';
+  String _serverUrl='http://s3.demo.nete2.com:8077';
+  String video='StreamH';
   List<dynamic> mediaList= [];
 
   RTCVideoRenderer _localRenderer = new RTCVideoRenderer();
@@ -105,108 +105,23 @@ class _PlayStreamState extends State<PlayStream> {
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
     return Scaffold(
-      extendBody: true,
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
+      //extendBody: true,
+      appBar: null,
+//      AppBar(
+//        // Here we take the value from the MyHomePage object that was created by
+//        // the App.build method, and use it to set our appbar title.
+//        title: Text(widget.title),
+//      ),
       body:
-      OrientationBuilder(builder: (context, orientation) {
-        return new Container(
-          child: Column(
-            children: <Widget>[
-              Text(""),
-              Padding(
-                padding: EdgeInsets.all(20),
-                child: TextField(
-                  onChanged: (value){
-                    this.setState(() {
-                      _serverUrl = value;
-                    });
-                  },
-                  decoration: InputDecoration(
-                      border: OutlineInputBorder(),
-                      hintText: _serverUrl
-                  ),
-                ),
-              ),
-              Row(
-                children: <Widget>[
-                  Padding(
-                    padding: EdgeInsets.all(10),
-                    child: Text("Video List:",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 16),),
-                  ),
-                  Container(
-                    child: new DropdownButton<String>(
-                      hint:  Text("Select item"),
-                      value: video,
 
-                      items: mediaList.map((dynamic media) {
-                        var value= media['video'];
-                        return new DropdownMenuItem<String>(
-                          value: value,
-                          child: new Text(value),
-                        );
-                      }).toList(),
-                      onChanged: (_value) {
-                        this.setState(() {
-                          video = _value;
-                        });
-                      },
-                    ),
-                  )
-                ],
-              ),
-              Row(
-                children: <Widget>[
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(0, 0, 10, 0),
-                      child: RaisedButton(
-                          onPressed: () async {
-                            var res = await _signaling.getMediaList(_serverUrl);
-                            this.setState(() {
-                              mediaList= json.decode(res);
-                            });
-                          },
-                          child: Text(
-                              'Get Video List',
-                              style: TextStyle(fontSize: 20)
-                          ))
-                  ),
-                  Padding(
-                      padding: EdgeInsets.fromLTRB(0, 0, 10, 0),
-                      child: RaisedButton(
-                          onPressed: () async {
-                            if(_signaling != null){
-                              _signaling.disconnect();
-                              _signaling = null;
-                              _connect();
-                            }
-                          },
-                          child: Text(
-                              'Connect',
-                              style: TextStyle(fontSize: 20)
-                          ))
-                  )
-                ],
-              ),
-
-            Text(""),
-              Text("Remote Video"),
-              new Container(
-                margin: new EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
-                width: MediaQuery. of(context). size. width,
-                height:
-                 300 ,
-                child: new RTCVideoView(_remoteRenderer                                                                                                                                                                                                                              ),
-                decoration: new BoxDecoration(color: Colors.black54),
-              ),
-
-            ],
-          ),
-        );
-      })
+      new Container(
+        margin: new EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
+        width: MediaQuery.of(context).size.width,
+        height:
+        MediaQuery.of(context).size.height ,
+        child: new RTCVideoView(_remoteRenderer                                                                                                                                                                                                                              ),
+        decoration: new BoxDecoration(color: Colors.black54),
+      )
 
     );
   }
