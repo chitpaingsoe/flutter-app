@@ -18,7 +18,7 @@
     <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
     <application
         android:name="io.flutter.app.FlutterApplication"
-        android:label="flutterapp"
+        android:label="WebRTC Play"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"
