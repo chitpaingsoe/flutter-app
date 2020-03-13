@@ -26,10 +26,11 @@ class PlayStreamWithConfig extends StatefulWidget {
 
 class _PlayStreamWithConfigState extends State<PlayStreamWithConfig> {
   Signaling _signaling;
-  String _serverUrl='http://192.168.0.68:8000';
-  String video='StreamHLocal';
-  List<dynamic> mediaList= [];
+  String _serverUrl = 'http://192.168.0.68:8000';
+  String video = 'StreamHLocal';
+  List<dynamic> mediaList = [];
   String _signalState = "none";
+  bool _viewFullVideo = false;
 
   RTCVideoRenderer _localRenderer = new RTCVideoRenderer();
   RTCVideoRenderer _remoteRenderer = new RTCVideoRenderer();
@@ -41,7 +42,6 @@ class _PlayStreamWithConfigState extends State<PlayStreamWithConfig> {
     _connect();
   }
 
-
   initRenderers() async {
     await _localRenderer.initialize();
     await _remoteRenderer.initialize();
@@ -52,7 +52,7 @@ class _PlayStreamWithConfigState extends State<PlayStreamWithConfig> {
       this.setState(() {
         _signalState = "connecting";
       });
-      _signaling = new Signaling(_serverUrl,video)..connect();
+      _signaling = new Signaling(_serverUrl, video)..connect();
 
       await getMediaLists();
 
@@ -80,8 +80,6 @@ class _PlayStreamWithConfigState extends State<PlayStreamWithConfig> {
 //        }
 //      };
 
-
-
       _signaling.onLocalStream = ((stream) {
         _localRenderer.srcObject = stream;
       });
@@ -98,40 +96,50 @@ class _PlayStreamWithConfigState extends State<PlayStreamWithConfig> {
       });
     }
   }
+
   Future<void> getMediaLists() async {
     this.setState(() {
-      mediaList=[];
+      mediaList = [];
     });
     var res = await _signaling.getMediaList(_serverUrl);
     this.setState(() {
-      mediaList= json.decode(res);
+      mediaList = json.decode(res);
     });
   }
-  Widget getandRenderSignalState(){
-    if(this._signalState == "connecting"){
-      return Text("Connecting.....",style: TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 18,
-          color: Color.fromRGBO(230, 184, 0, 1.0)
-      ),);
-    }else if(this._signalState == "connected"){
-      return Text("Connected",style: TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 18,
-          color: Color.fromRGBO(0, 179, 0, 1.0)
-      ),);
-    }else if (this._signalState == "stopped"){
-      return Text("Stopped",style: TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 18,
-          color: Color.fromRGBO(0, 77, 153, 1.0)
-      ),);
-    }else{
-      return Text("None",style: TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 18,
-          color: Color.fromRGBO(0, 0, 0, 1.0)
-      ),);
+
+  Widget getandRenderSignalState() {
+    if (this._signalState == "connecting") {
+      return Text(
+        "Connecting.....",
+        style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+            color: Color.fromRGBO(230, 184, 0, 1.0)),
+      );
+    } else if (this._signalState == "connected") {
+      return Text(
+        "Connected",
+        style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+            color: Color.fromRGBO(0, 179, 0, 1.0)),
+      );
+    } else if (this._signalState == "stopped") {
+      return Text(
+        "Stopped",
+        style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+            color: Color.fromRGBO(0, 77, 153, 1.0)),
+      );
+    } else {
+      return Text(
+        "None",
+        style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+            color: Color.fromRGBO(0, 0, 0, 1.0)),
+      );
     }
   }
 
@@ -145,133 +153,156 @@ class _PlayStreamWithConfigState extends State<PlayStreamWithConfig> {
     // than having to individually change instances of widgets.
     return Scaffold(
         extendBody: true,
-        appBar: AppBar(
+        appBar:
+        this._viewFullVideo ? null :
+        AppBar(
           // Here we take the value from the MyHomePage object that was created by
           // the App.build method, and use it to set our appbar title.
           title: Text(widget.title),
         ),
-        body:
-                  new Container(
-            child: Column(
-              children: <Widget>[
-                Text(""),
-                Padding(
-                  padding: EdgeInsets.all(20),
-                  child: TextField(
-                    onChanged: (value){
+        body: this._viewFullVideo
+            ? new Container(
+                margin: new EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
+                width: MediaQuery.of(context).size.width,
+                height: MediaQuery.of(context).size.height,
+                child:
+                  GestureDetector(
+                    onDoubleTap: (){
                       this.setState(() {
-                        _serverUrl = value;
+                        _viewFullVideo = false;
                       });
                     },
-                    decoration: InputDecoration(
-                        border: OutlineInputBorder(),
-                        hintText: _serverUrl
-                    ),
+                    child: new RTCVideoView(_remoteRenderer),
                   ),
-                ),
-                Row(
+                decoration: new BoxDecoration(color: Colors.black54),
+              )
+            : new Container(
+                child: Column(
                   children: <Widget>[
+                    Text(""),
                     Padding(
-                      padding: EdgeInsets.all(10),
-                      child: Text("Select Video:",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 16),),
-                    ),
-                    Container(
-                      child: new DropdownButton<String>(
-                        hint:  Text("Select item"),
-                        value: video.isNotEmpty ? video :null,
-
-                        items: mediaList.map((dynamic media) {
-                          var value= media['video'];
-                          return new DropdownMenuItem<String>(
-                            value: value,
-                            child: new Text(value),
-                          );
-                        }).toList(),
-                        onChanged: (_value) {
+                      padding: EdgeInsets.all(20),
+                      child: TextField(
+                        onChanged: (value) {
                           this.setState(() {
-                            video = _value;
+                            _serverUrl = value;
                           });
                         },
+                        decoration: InputDecoration(
+                            border: OutlineInputBorder(), hintText: _serverUrl),
                       ),
-                    )
+                    ),
+                    Row(
+                      children: <Widget>[
+                        Padding(
+                          padding: EdgeInsets.all(10),
+                          child: Text(
+                            "Select Video:",
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 16),
+                          ),
+                        ),
+                        Container(
+                          child: new DropdownButton<String>(
+                            hint: Text("Select item"),
+                            value: video.isNotEmpty ? video : null,
+                            items: mediaList.map((dynamic media) {
+                              var value = media['video'];
+                              return new DropdownMenuItem<String>(
+                                value: value,
+                                child: new Text(value),
+                              );
+                            }).toList(),
+                            onChanged: (_value) {
+                              this.setState(() {
+                                video = _value;
+                              });
+                            },
+                          ),
+                        )
+                      ],
+                    ),
+                    Row(
+                      children: <Widget>[
+                        Padding(
+                            padding: EdgeInsets.fromLTRB(0, 0, 10, 0),
+                            child: RaisedButton(
+                                onPressed: () async {
+                                  await getMediaLists();
+                                },
+                                child: Text('Get Video List',
+                                    style: TextStyle(fontSize: 20)))),
+                        Padding(
+                            padding: EdgeInsets.fromLTRB(0, 0, 10, 0),
+                            child: RaisedButton(
+                                onPressed: () async {
+                                  if (_signaling != null && video.isNotEmpty) {
+                                    _signaling.disconnect();
+                                    _signaling = null;
+                                    _connect();
+                                  }
+                                },
+                                child: Text('Connect',
+                                    style: TextStyle(fontSize: 20)))),
+                        Padding(
+                            padding: EdgeInsets.fromLTRB(0, 0, 10, 0),
+                            child: RaisedButton(
+                                onPressed: () async {
+                                  if (_signaling != null) {
+                                    _signaling.disconnect();
+                                    this.setState(() {
+                                      video = "";
+                                      _signalState = "stopped";
+                                    });
+                                  }
+                                },
+                                child: Text('Stop',
+                                    style: TextStyle(fontSize: 20))))
+                      ],
+                    ),
+                    Text(""),
+                    Row(
+                      children: <Widget>[
+                        Padding(
+                            padding: EdgeInsets.all(10),
+                            child: Text("Status:")),
+                        Padding(
+                          padding: EdgeInsets.all(10),
+                          child: getandRenderSignalState(),
+                        )
+                      ],
+                    ),
+
+                    new Container(
+                      margin: new EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
+                      width: MediaQuery.of(context).size.width,
+                      height: 300,
+                      child: GestureDetector(
+                        onDoubleTap: (){
+                          this.setState(() {
+                            _viewFullVideo = true;
+                          });
+                        },
+                        child: new RTCVideoView(_remoteRenderer),
+                      ),
+                      decoration: new BoxDecoration(color: Colors.black54),
+                    ),
+//                    Padding(
+//                        padding: EdgeInsets.fromLTRB(0, 0, 10, 0),
+//                        child: RaisedButton(
+//                            onPressed: () async {
+//                              if (_signaling != null) {
+//                                this.setState(() {
+//                                  _viewFullVideo = true;
+//                                });
+//                              }
+//                            },
+//                            child: Text('View Full Video',
+//                                style: TextStyle(fontSize: 20)))),
+
+
                   ],
                 ),
-                Row(
-                  children: <Widget>[
-                    Padding(
-                        padding: EdgeInsets.fromLTRB(0, 0, 10, 0),
-                        child: RaisedButton(
-                            onPressed: () async {
-                              await getMediaLists();
-                            },
-                            child: Text(
-                                'Get Video List',
-                                style: TextStyle(fontSize: 20)
-                            ))
-                    ),
-                    Padding(
-                        padding: EdgeInsets.fromLTRB(0, 0, 10, 0),
-                        child: RaisedButton(
-                            onPressed: () async {
-                              if(_signaling != null && video.isNotEmpty){
-                                _signaling.disconnect();
-                                _signaling = null;
-                                _connect();
-                              }
-                            },
-                            child: Text(
-                                'Connect',
-                                style: TextStyle(fontSize: 20)
-                            ))
-                    ),
-                    Padding(
-                        padding: EdgeInsets.fromLTRB(0, 0, 10, 0),
-                        child: RaisedButton(
-                            onPressed: () async {
-                              if(_signaling != null){
-                                _signaling.disconnect();
-                                this.setState(() {
-                                  video="";
-                                  _signalState="stopped";
-                                });
-                              }
-                            },
-                            child: Text(
-                                'Stop',
-                                style: TextStyle(fontSize: 20)
-                            ))
-                    )
-                  ],
-                ),
-
-                Text(""),
-                Row(
-                  children: <Widget>[
-                    Padding(
-                      padding: EdgeInsets.all(10),
-                      child: Text("Status:")
-                    ),
-                    Padding(
-                      padding: EdgeInsets.all(10),
-                      child: getandRenderSignalState(),
-                    )
-                  ],
-                ),
-                Text("Remote Video"),
-                new Container(
-                  margin: new EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
-                  width: MediaQuery. of(context). size. width,
-                  height:
-                  300 ,
-                  child: new RTCVideoView(_remoteRenderer                                                                                                                                                                                                                              ),
-                  decoration: new BoxDecoration(color: Colors.black54),
-                ),
-
-              ],
-            ),
-          )
-
-
-    );
+              ));
   }
 }
