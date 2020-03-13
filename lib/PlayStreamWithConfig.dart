@@ -29,6 +29,7 @@ class _PlayStreamWithConfigState extends State<PlayStreamWithConfig> {
   String _serverUrl='http://192.168.0.68:8000';
   String video='StreamHLocal';
   List<dynamic> mediaList= [];
+  String _signalState = "none";
 
   RTCVideoRenderer _localRenderer = new RTCVideoRenderer();
   RTCVideoRenderer _remoteRenderer = new RTCVideoRenderer();
@@ -48,33 +49,36 @@ class _PlayStreamWithConfigState extends State<PlayStreamWithConfig> {
 
   void _connect() async {
     if (_signaling == null) {
+      this.setState(() {
+        _signalState = "connecting";
+      });
       _signaling = new Signaling(_serverUrl,video)..connect();
 
       await getMediaLists();
 
-      _signaling.onStateChange = (SignalingState state) {
-        switch (state) {
-          case SignalingState.CallStateNew:
-            this.setState(() {
-              // _inCalling = true;
-            });
-            break;
-          case SignalingState.CallStateBye:
-            this.setState(() {
-              _localRenderer.srcObject = null;
-              _remoteRenderer.srcObject = null;
-              //_inCalling = false;
-            });
-            break;
-          case SignalingState.CallStateInvite:
-          case SignalingState.CallStateConnected:
-          case SignalingState.CallStateRinging:
-          case SignalingState.ConnectionClosed:
-          case SignalingState.ConnectionError:
-          case SignalingState.ConnectionOpen:
-            break;
-        }
-      };
+//      _signaling.onStateChange = (SignalingState state) {
+//        switch (state) {
+//          case SignalingState.CallStateNew:
+//            this.setState(() {
+//              // _inCalling = true;
+//            });
+//            break;
+//          case SignalingState.CallStateBye:
+//            this.setState(() {
+//              _localRenderer.srcObject = null;
+//              _remoteRenderer.srcObject = null;
+//              //_inCalling = false;
+//            });
+//            break;
+//          case SignalingState.CallStateInvite:
+//          case SignalingState.CallStateConnected:
+//          case SignalingState.CallStateRinging:
+//          case SignalingState.ConnectionClosed:
+//          case SignalingState.ConnectionError:
+//          case SignalingState.ConnectionOpen:
+//            break;
+//        }
+//      };
 
 
 
@@ -84,6 +88,9 @@ class _PlayStreamWithConfigState extends State<PlayStreamWithConfig> {
 
       _signaling.onAddRemoteStream = ((stream) {
         _remoteRenderer.srcObject = stream;
+        this.setState(() {
+          _signalState = "connected";
+        });
       });
 
       _signaling.onRemoveRemoteStream = ((stream) {
@@ -94,14 +101,39 @@ class _PlayStreamWithConfigState extends State<PlayStreamWithConfig> {
   Future<void> getMediaLists() async {
     this.setState(() {
       mediaList=[];
-      video="";
     });
     var res = await _signaling.getMediaList(_serverUrl);
     this.setState(() {
       mediaList= json.decode(res);
     });
   }
-
+  Widget getandRenderSignalState(){
+    if(this._signalState == "connecting"){
+      return Text("Connecting.....",style: TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 18,
+          color: Color.fromRGBO(230, 184, 0, 1.0)
+      ),);
+    }else if(this._signalState == "connected"){
+      return Text("Connected",style: TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 18,
+          color: Color.fromRGBO(0, 179, 0, 1.0)
+      ),);
+    }else if (this._signalState == "stopped"){
+      return Text("Stopped",style: TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 18,
+          color: Color.fromRGBO(0, 77, 153, 1.0)
+      ),);
+    }else{
+      return Text("None",style: TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 18,
+          color: Color.fromRGBO(0, 0, 0, 1.0)
+      ),);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -170,14 +202,7 @@ class _PlayStreamWithConfigState extends State<PlayStreamWithConfig> {
                         padding: EdgeInsets.fromLTRB(0, 0, 10, 0),
                         child: RaisedButton(
                             onPressed: () async {
-                              this.setState(() {
-                                mediaList=[];
-                                video="";
-                              });
-                              var res = await _signaling.getMediaList(_serverUrl);
-                              this.setState(() {
-                                mediaList= json.decode(res);
-                              });
+                              await getMediaLists();
                             },
                             child: Text(
                                 'Get Video List',
@@ -188,7 +213,7 @@ class _PlayStreamWithConfigState extends State<PlayStreamWithConfig> {
                         padding: EdgeInsets.fromLTRB(0, 0, 10, 0),
                         child: RaisedButton(
                             onPressed: () async {
-                              if(_signaling != null){
+                              if(_signaling != null && video.isNotEmpty){
                                 _signaling.disconnect();
                                 _signaling = null;
                                 _connect();
@@ -205,6 +230,10 @@ class _PlayStreamWithConfigState extends State<PlayStreamWithConfig> {
                             onPressed: () async {
                               if(_signaling != null){
                                 _signaling.disconnect();
+                                this.setState(() {
+                                  video="";
+                                  _signalState="stopped";
+                                });
                               }
                             },
                             child: Text(
@@ -216,6 +245,18 @@ class _PlayStreamWithConfigState extends State<PlayStreamWithConfig> {
                 ),
 
                 Text(""),
+                Row(
+                  children: <Widget>[
+                    Padding(
+                      padding: EdgeInsets.all(10),
+                      child: Text("Status:")
+                    ),
+                    Padding(
+                      padding: EdgeInsets.all(10),
+                      child: getandRenderSignalState(),
+                    )
+                  ],
+                ),
                 Text("Remote Video"),
                 new Container(
                   margin: new EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
