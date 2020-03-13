@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutterapp/PlayStream.dart';
+import 'package:flutterapp/PlayStreamWithConfig.dart';
 
 void main() => runApp(MyApp());
 
@@ -21,7 +22,7 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: PlayStream(title: 'WebRTC Stream'),
+      home: PlayStreamWithConfig(title: 'WebRTC Stream'),
     );
   }
 }
