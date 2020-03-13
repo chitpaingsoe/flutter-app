@@ -27,7 +27,7 @@ class PlayStreamWithConfig extends StatefulWidget {
 class _PlayStreamWithConfigState extends State<PlayStreamWithConfig> {
   Signaling _signaling;
   String _serverUrl='http://192.168.0.68:8000';
-  String video='rtsp://192.168.0.203/user=admin_password=tlJwpbo6_channel=1_stream=0.sdp?real_stream';
+  String video='StreamHLocal';
   List<dynamic> mediaList= [];
 
   RTCVideoRenderer _localRenderer = new RTCVideoRenderer();
@@ -49,6 +49,8 @@ class _PlayStreamWithConfigState extends State<PlayStreamWithConfig> {
   void _connect() async {
     if (_signaling == null) {
       _signaling = new Signaling(_serverUrl,video)..connect();
+
+      await getMediaLists();
 
       _signaling.onStateChange = (SignalingState state) {
         switch (state) {
@@ -74,12 +76,7 @@ class _PlayStreamWithConfigState extends State<PlayStreamWithConfig> {
         }
       };
 
-      _signaling.onPeersUpdate = ((event) {
-//        this.setState(() {
-//          _selfId = event['self'];
-//          _peers = event['peers'];
-//        });
-      });
+
 
       _signaling.onLocalStream = ((stream) {
         _localRenderer.srcObject = stream;
@@ -93,6 +90,16 @@ class _PlayStreamWithConfigState extends State<PlayStreamWithConfig> {
         _remoteRenderer.srcObject = null;
       });
     }
+  }
+  Future<void> getMediaLists() async {
+    this.setState(() {
+      mediaList=[];
+      video="";
+    });
+    var res = await _signaling.getMediaList(_serverUrl);
+    this.setState(() {
+      mediaList= json.decode(res);
+    });
   }
 
 
@@ -134,7 +141,7 @@ class _PlayStreamWithConfigState extends State<PlayStreamWithConfig> {
                   children: <Widget>[
                     Padding(
                       padding: EdgeInsets.all(10),
-                      child: Text("Video List:",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 16),),
+                      child: Text("Select Video:",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 16),),
                     ),
                     Container(
                       child: new DropdownButton<String>(
@@ -189,6 +196,19 @@ class _PlayStreamWithConfigState extends State<PlayStreamWithConfig> {
                             },
                             child: Text(
                                 'Connect',
+                                style: TextStyle(fontSize: 20)
+                            ))
+                    ),
+                    Padding(
+                        padding: EdgeInsets.fromLTRB(0, 0, 10, 0),
+                        child: RaisedButton(
+                            onPressed: () async {
+                              if(_signaling != null){
+                                _signaling.disconnect();
+                              }
+                            },
+                            child: Text(
+                                'Stop',
                                 style: TextStyle(fontSize: 20)
                             ))
                     )

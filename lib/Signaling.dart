@@ -102,6 +102,7 @@ class Signaling {
           await http.get(this._host + '/api/hangup?peerid=' + this._id);
       try {
         this._pc.dispose();
+
         this._pc.close();
       } on Exception {
         print('Fail to close peer Connection : ' + this._id);
@@ -117,7 +118,6 @@ class Signaling {
 
   void onReceiveGetIceServers() async {
     var options = 'rtptransport=tcp&timeout=60';
-    var video = 'rtsp://192.168.0.203/user=admin_password=tlJwpbo6_channel=1_stream=0.sdp?real_stream';
 
     try {
       var media = 'video';
@@ -314,7 +314,6 @@ class Signaling {
   }
 
   _send2(data, url) async {
-    JsonEncoder encoder = new JsonEncoder();
     var parsed= data as RTCSessionDescription;
     var payload = json.encode(parsed.toMap());
     var res = await http.post(url, body: payload);
