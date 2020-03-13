@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_webrtc/rtc_video_view.dart';
 
 import 'Signaling.dart';
@@ -168,6 +169,7 @@ class _PlayStreamWithConfigState extends State<PlayStreamWithConfig> {
                 child:
                   GestureDetector(
                     onDoubleTap: (){
+                      SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
                       this.setState(() {
                         _viewFullVideo = false;
                       });
@@ -279,6 +281,7 @@ class _PlayStreamWithConfigState extends State<PlayStreamWithConfig> {
                       height: 300,
                       child: GestureDetector(
                         onDoubleTap: (){
+                          SystemChrome.setPreferredOrientations([DeviceOrientation.landscapeLeft]);
                           this.setState(() {
                             _viewFullVideo = true;
                           });
